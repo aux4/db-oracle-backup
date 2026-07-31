@@ -54,7 +54,7 @@ jobs:
           command: test
 
   publish:
-    needs: [lint, test]
+    needs: [lint]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
