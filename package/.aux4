@@ -13,6 +13,7 @@
     "datapump"
   ],
   "dependencies": [
+    "aux4/config",
     "aux4/db-oracle"
   ],
   "system": [
