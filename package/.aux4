@@ -1,0 +1,236 @@
+{
+  "scope": "aux4",
+  "name": "db-oracle-backup",
+  "version": "0.1.0",
+  "description": "backup and restore provider commands for the db:oracle profile (wraps Oracle Data Pump expdp/impdp)",
+  "license": "Apache-2.0",
+  "tags": [
+    "db",
+    "database",
+    "oracle",
+    "backup",
+    "restore",
+    "datapump"
+  ],
+  "dependencies": [
+    "aux4/db-oracle"
+  ],
+  "system": [
+    [
+      "test:expdp help=y 2>&1 | head -1",
+      "linux:oracle-instantclient-tools"
+    ]
+  ],
+  "profiles": [
+    {
+      "name": "db:oracle",
+      "commands": [
+        {
+          "name": "backup",
+          "execute": [
+            "when:${path} && ${dir}==:set:dir=!dirname value(path)",
+            "when:${path} && ${file}==:set:file=!basename value(path)",
+            "when:${dir}==:exit:1:Error: provide --dir (Oracle directory name) and --file (dump file name)",
+            "when:${file}==:exit:1:Error: provide --dir (Oracle directory name) and --file (dump file name)",
+            "set:hasExt=!echo value(file) | grep -c '\\.' || true",
+            "when:${hasExt}==0:set:file=${file}.dmp",
+            "set:svc=nvl(serviceName, database)",
+            "set:dumpOpts=",
+            "when:${schemas}:set:dumpOpts=${dumpOpts} schemas=${schemas}",
+            "when:${tables}:set:dumpOpts=${dumpOpts} tables=${tables}",
+            "when:${full}:set:dumpOpts=${dumpOpts} full=y",
+            "when:${content}:set:dumpOpts=${dumpOpts} content=${content}",
+            "when:${compression}:set:dumpOpts=${dumpOpts} compression=${compression}",
+            "when:${parallel}:set:dumpOpts=${dumpOpts} parallel=${parallel}",
+            "set:dumpOpts=${dumpOpts} ${options}",
+            "nout:EXPDP=$(command -v expdp 2>/dev/null); if [ -z \"$EXPDP\" ]; then echo 'Error: expdp not found. Install Oracle Instant Client tools or set PATH to include the Oracle client bin directory.' >&2; exit 1; fi; \"$EXPDP\" value(user)/value(password)@value(host):value(port)/value(svc) directory=value(dir) dumpfile=value(file) logfile=value(logFile) REUSE_DUMPFILES=Y ${dumpOpts}",
+            "echo '{\"path\":\"${dir}/${file}\",\"status\":\"success\",\"format\":\"oracle-datapump\"}'"
+          ],
+          "help": {
+            "text": "Backup the database using Oracle Data Pump (expdp). The dump is written to an Oracle DIRECTORY on the server, not to the local filesystem",
+            "variables": [
+              {
+                "name": "host",
+                "text": "Database host",
+                "default": "localhost"
+              },
+              {
+                "name": "port",
+                "text": "Database port",
+                "default": "1521"
+              },
+              {
+                "name": "database",
+                "text": "Database service name (used when --serviceName is not set)",
+                "default": "FREEPDB1"
+              },
+              {
+                "name": "user",
+                "text": "Database user",
+                "default": "system"
+              },
+              {
+                "name": "password",
+                "text": "Database password"
+              },
+              {
+                "name": "serviceName",
+                "text": "Oracle service name (takes precedence over --database)",
+                "default": ""
+              },
+              {
+                "name": "dir",
+                "text": "Oracle DIRECTORY object name on the server (e.g. DATA_PUMP_DIR)",
+                "default": ""
+              },
+              {
+                "name": "file",
+                "text": "Dump file name within the Oracle directory (e.g. mydb.dmp). A '.dmp' extension is added when the name has none",
+                "default": ""
+              },
+              {
+                "name": "path",
+                "text": "Shorthand for dir/file — split on the last slash into --dir and --file. Prefer --dir + --file for clarity",
+                "default": ""
+              },
+              {
+                "name": "schemas",
+                "text": "Comma-separated list of schemas to export (expdp schemas=)",
+                "default": ""
+              },
+              {
+                "name": "tables",
+                "text": "Comma-separated list of tables to export, as SCHEMA.TABLE (expdp tables=)",
+                "default": ""
+              },
+              {
+                "name": "full",
+                "text": "Full database export (expdp full=y)",
+                "default": ""
+              },
+              {
+                "name": "content",
+                "text": "What to include: all, data_only, or metadata_only (omitted = all)",
+                "default": ""
+              },
+              {
+                "name": "compression",
+                "text": "Compression level: all, data_only, metadata_only, or none",
+                "default": ""
+              },
+              {
+                "name": "parallel",
+                "text": "Degree of parallelism for the export (expdp parallel=N)",
+                "default": ""
+              },
+              {
+                "name": "logFile",
+                "text": "Log file name within the Oracle directory",
+                "default": "export.log"
+              },
+              {
+                "name": "options",
+                "text": "Additional raw expdp options appended verbatim",
+                "default": ""
+              }
+            ]
+          }
+        },
+        {
+          "name": "restore",
+          "execute": [
+            "when:${path} && ${dir}==:set:dir=!dirname value(path)",
+            "when:${path} && ${file}==:set:file=!basename value(path)",
+            "when:${dir}==:exit:1:Error: provide --dir (Oracle directory name) and --file (dump file name)",
+            "when:${file}==:exit:1:Error: provide --dir (Oracle directory name) and --file (dump file name)",
+            "set:svc=nvl(serviceName, database)",
+            "set:importOpts=",
+            "when:${content}:set:importOpts=${importOpts} content=${content}",
+            "set:importOpts=${importOpts} table_exists_action=${tableExistsAction}",
+            "nout:IMPDP=$(command -v impdp 2>/dev/null); if [ -z \"$IMPDP\" ]; then echo 'Error: impdp not found. Install Oracle Instant Client tools or set PATH to include the Oracle client bin directory.' >&2; exit 1; fi; REMAP=''; RS='value(remapSchema)'; [ -n \"$RS\" ] && REMAP=\"$REMAP remap_schema=$RS\"; RT='value(remapTablespace)'; [ -n \"$RT\" ] && REMAP=\"$REMAP remap_tablespace=$RT\"; \"$IMPDP\" value(user)/value(password)@value(host):value(port)/value(svc) directory=value(dir) dumpfile=value(file) logfile=value(logFile) $REMAP ${importOpts} ${options}",
+            "echo '{\"path\":\"${dir}/${file}\",\"database\":\"${svc}\",\"status\":\"success\",\"action\":\"restore\"}'"
+          ],
+          "help": {
+            "text": "Restore a database from an Oracle Data Pump dump file (impdp). The dump file must exist in an Oracle DIRECTORY on the server",
+            "variables": [
+              {
+                "name": "host",
+                "text": "Database host",
+                "default": "localhost"
+              },
+              {
+                "name": "port",
+                "text": "Database port",
+                "default": "1521"
+              },
+              {
+                "name": "database",
+                "text": "Database service name (used when --serviceName is not set)",
+                "default": "FREEPDB1"
+              },
+              {
+                "name": "user",
+                "text": "Database user",
+                "default": "system"
+              },
+              {
+                "name": "password",
+                "text": "Database password"
+              },
+              {
+                "name": "serviceName",
+                "text": "Oracle service name (takes precedence over --database)",
+                "default": ""
+              },
+              {
+                "name": "dir",
+                "text": "Oracle DIRECTORY object name on the server (e.g. DATA_PUMP_DIR)",
+                "default": ""
+              },
+              {
+                "name": "file",
+                "text": "Dump file name within the Oracle directory (e.g. mydb.dmp)",
+                "default": ""
+              },
+              {
+                "name": "path",
+                "text": "Shorthand for dir/file — split on the last slash into --dir and --file. Prefer --dir + --file for clarity",
+                "default": ""
+              },
+              {
+                "name": "remapSchema",
+                "text": "Remap schema during import, as OLD_SCHEMA:NEW_SCHEMA (impdp remap_schema=)",
+                "default": ""
+              },
+              {
+                "name": "remapTablespace",
+                "text": "Remap tablespace during import, as OLD_TS:NEW_TS (impdp remap_tablespace=)",
+                "default": ""
+              },
+              {
+                "name": "content",
+                "text": "What to include: all, data_only, or metadata_only (omitted = all)",
+                "default": ""
+              },
+              {
+                "name": "tableExistsAction",
+                "text": "Action when a table already exists: skip, append, truncate, or replace",
+                "default": "replace"
+              },
+              {
+                "name": "logFile",
+                "text": "Log file name within the Oracle directory",
+                "default": "import.log"
+              },
+              {
+                "name": "options",
+                "text": "Additional raw impdp options appended verbatim",
+                "default": ""
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
