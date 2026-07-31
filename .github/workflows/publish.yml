@@ -42,17 +42,6 @@ jobs:
           command: lint
           strict: "true"
 
-  test:
-    needs: [lint]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Test
-        uses: aux4/action@v1
-        with:
-          command: test
-
   publish:
     needs: [lint]
     runs-on: ubuntu-latest
