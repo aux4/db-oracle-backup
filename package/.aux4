@@ -44,7 +44,10 @@
             "when:${parallel}:set:dumpOpts=${dumpOpts} parallel=${parallel}",
             "set:dumpOpts=${dumpOpts} ${options}",
             "nout:EXPDP=$(command -v expdp 2>/dev/null); if [ -z \"$EXPDP\" ]; then echo 'Error: expdp not found. Install Oracle Instant Client tools or set PATH to include the Oracle client bin directory.' >&2; exit 1; fi; \"$EXPDP\" value(user)/value(password)@value(host):value(port)/value(svc) directory=value(dir) dumpfile=value(file) logfile=value(logFile) REUSE_DUMPFILES=Y ${dumpOpts}",
-            "echo '{\"path\":\"${dir}/${file}\",\"status\":\"success\",\"format\":\"oracle-datapump\"}'"
+            "set:backuppath=${dir}/${file}",
+            "set:status=success",
+            "set:format=oracle-datapump",
+            "echo 'object(backuppath:path, status, format)'"
           ],
           "help": {
             "text": "Backup the database using Oracle Data Pump (expdp). The dump is written to an Oracle DIRECTORY on the server, not to the local filesystem",
@@ -148,7 +151,10 @@
             "when:${content}:set:importOpts=${importOpts} content=${content}",
             "set:importOpts=${importOpts} table_exists_action=${tableExistsAction}",
             "nout:IMPDP=$(command -v impdp 2>/dev/null); if [ -z \"$IMPDP\" ]; then echo 'Error: impdp not found. Install Oracle Instant Client tools or set PATH to include the Oracle client bin directory.' >&2; exit 1; fi; REMAP=''; RS='value(remapSchema)'; [ -n \"$RS\" ] && REMAP=\"$REMAP remap_schema=$RS\"; RT='value(remapTablespace)'; [ -n \"$RT\" ] && REMAP=\"$REMAP remap_tablespace=$RT\"; \"$IMPDP\" value(user)/value(password)@value(host):value(port)/value(svc) directory=value(dir) dumpfile=value(file) logfile=value(logFile) $REMAP ${importOpts} ${options}",
-            "echo '{\"path\":\"${dir}/${file}\",\"database\":\"${svc}\",\"status\":\"success\",\"action\":\"restore\"}'"
+            "set:backuppath=${dir}/${file}",
+            "set:status=success",
+            "set:action=restore",
+            "echo 'object(backuppath:path, svc:database, status, action)'"
           ],
           "help": {
             "text": "Restore a database from an Oracle Data Pump dump file (impdp). The dump file must exist in an Oracle DIRECTORY on the server",

@@ -75,7 +75,7 @@ aux4 db oracle backup --configFile config.yaml --config test --dir DATA_PUMP_DIR
 ```
 
 ```expect:regex
-\{"path":"DATA_PUMP_DIR/bkptest_export\.dmp","status":"success","format":"oracle-datapump"\}
+\{"format":"oracle-datapump","path":"DATA_PUMP_DIR/bkptest_export\.dmp","status":"success"\}
 ```
 
 ## backup with --path shorthand
@@ -91,7 +91,7 @@ aux4 db oracle backup --configFile config.yaml --config test --path DATA_PUMP_DI
 ```
 
 ```expect:regex
-\{"path":"DATA_PUMP_DIR/bkptest_path\.dmp","status":"success","format":"oracle-datapump"\}
+\{"format":"oracle-datapump","path":"DATA_PUMP_DIR/bkptest_path\.dmp","status":"success"\}
 ```
 
 ## backup auto-appends .dmp extension
@@ -107,7 +107,7 @@ aux4 db oracle backup --configFile config.yaml --config test --dir DATA_PUMP_DIR
 ```
 
 ```expect:regex
-\{"path":"DATA_PUMP_DIR/bkptest_noext\.dmp","status":"success","format":"oracle-datapump"\}
+\{"format":"oracle-datapump","path":"DATA_PUMP_DIR/bkptest_noext\.dmp","status":"success"\}
 ```
 
 ## backup with config-driven content option
@@ -123,7 +123,7 @@ aux4 db oracle backup --configFile config.yaml --config schemaonly --file bkptes
 ```
 
 ```expect:regex
-\{"path":"DATA_PUMP_DIR/bkptest_meta\.dmp","status":"success","format":"oracle-datapump"\}
+\{"format":"oracle-datapump","path":"DATA_PUMP_DIR/bkptest_meta\.dmp","status":"success"\}
 ```
 
 ## backup with no dir or file
@@ -159,7 +159,7 @@ aux4 db oracle restore --configFile config.yaml --config test --dir DATA_PUMP_DI
 ```
 
 ```expect:regex
-\{"path":"DATA_PUMP_DIR/bkptest_export\.dmp","database":"FREEPDB1","status":"success","action":"restore"\}
+\{"action":"restore","database":"FREEPDB1","path":"DATA_PUMP_DIR/bkptest_export\.dmp","status":"success"\}
 ```
 
 ### should bring the rows back
@@ -189,7 +189,7 @@ aux4 db oracle restore --configFile config.yaml --config test --dir DATA_PUMP_DI
 ```
 
 ```expect:regex
-\{"path":"DATA_PUMP_DIR/bkptest_export\.dmp","database":"FREEPDB1","status":"success","action":"restore"\}
+\{"action":"restore","database":"FREEPDB1","path":"DATA_PUMP_DIR/bkptest_export\.dmp","status":"success"\}
 ```
 
 ## restore with no dir or file
